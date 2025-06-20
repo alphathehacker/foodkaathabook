@@ -1,73 +1,58 @@
-let allTransactions = [];
+const API_BASE = window.location.origin;
 
-document.getElementById("transactionForm").addEventListener("submit", function (e) {
+document.getElementById("transaction-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  const name = document.getElementById("name").value;
-  const item = document.getElementById("item").value;
-  const amount = document.getElementById("amount").value;
+  const customer = document.getElementById("customer").value;
+  const itemName = document.getElementById("item").value;
+  const amount = parseFloat(document.getElementById("amount").value);
   const type = document.getElementById("type").value;
 
-  fetch("https://your-backend-url.onrender.com/api/transactions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      customer: name,
-      items: [{ name: item, price: parseFloat(amount) }],
-      amount: parseFloat(amount),
-      type: type,
-    }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      document.getElementById("status").textContent = "✅ Transaction Added!";
-      document.getElementById("transactionForm").reset();
-      loadTransactions(); // refresh
-    })
-    .catch((err) => {
-      document.getElementById("status").textContent = "❌ Error adding transaction.";
+  const items = itemName ? [{ name: itemName, price: amount }] : [];
+
+  const transaction = { customer, items, amount, type };
+
+  try {
+    await fetch(`${API_BASE}/api/transactions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(transaction),
     });
+    document.getElementById("transaction-form").reset();
+    loadTransactions();
+  } catch (err) {
+    alert("❌ Error adding transaction.");
+    console.error(err);
+  }
 });
 
-function loadTransactions() {
-  fetch("https://your-backend-url.onrender.com/api/transactions")
-    .then((res) => res.json())
-    .then((data) => {
-      allTransactions = data.slice(-50).reverse(); // keep last 50
-      renderTransactions(allTransactions);
-    })
-    .catch((err) => {
-      document.getElementById("transactions").innerText = "❌ Failed to load transactions.";
-    });
+document.getElementById("search").addEventListener("input", loadTransactions);
+
+async function loadTransactions() {
+  try {
+    const res = await fetch(`${API_BASE}/api/transactions`);
+    const data = await res.json();
+    const search = document.getElementById("search").value.toLowerCase();
+    const filtered = data.filter(t => t.customer.toLowerCase().includes(search));
+    displayTransactions(filtered);
+  } catch (err) {
+    document.getElementById("transactions").innerHTML = "<p class='text-red-500'>❌ Failed to load transactions.</p>";
+  }
 }
 
-function renderTransactions(transactions) {
+function displayTransactions(transactions) {
   const container = document.getElementById("transactions");
-  container.innerHTML = "";
-
   if (transactions.length === 0) {
-    container.innerHTML = "<p class='text-center text-gray-500'>No transactions found.</p>";
+    container.innerHTML = "<p class='text-gray-500 text-center'>No transactions found.</p>";
     return;
   }
 
-  transactions.forEach((tx) => {
-    const el = document.createElement("div");
-    el.className = "bg-white p-3 rounded shadow text-sm";
-    el.innerHTML = `
-      <div><strong>${tx.customer}</strong> (${tx.type.toUpperCase()})</div>
-      <div>${tx.items.map(i => `${i.name} ₹${i.price}`).join(', ')}</div>
-      <div class="text-gray-500">${new Date(tx.date).toLocaleString()}</div>
-    `;
-    container.appendChild(el);
-  });
+  container.innerHTML = transactions.map(t => `
+    <div class="bg-white p-3 rounded shadow">
+      <p><strong>${t.customer}</strong> - ₹${t.amount} (${t.type})</p>
+      ${t.items.map(i => `<p class="text-sm text-gray-600">• ${i.name} - ₹${i.price}</p>`).join("")}
+      <p class="text-xs text-gray-400 text-right">${new Date(t.createdAt).toLocaleString()}</p>
+    </div>
+  `).join("");
 }
 
-// 🔍 Search functionality
-document.getElementById("searchInput").addEventListener("input", function () {
-  const query = this.value.toLowerCase();
-  const filtered = allTransactions.filter(tx => tx.customer.toLowerCase().includes(query));
-  renderTransactions(filtered);
-});
-
-// Load when page starts
 loadTransactions();
