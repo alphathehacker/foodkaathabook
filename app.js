@@ -40,6 +40,28 @@ app.get('/api/transactions', async (req, res) => {
   }
 });
 
+// Add these below the existing routes
+
+// Update a transaction
+app.put('/api/transactions/:id', async (req, res) => {
+  try {
+    const updated = await Transaction.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete a transaction
+app.delete('/api/transactions/:id', async (req, res) => {
+  try {
+    await Transaction.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
