@@ -1,4 +1,4 @@
-# 🍲 Food Katha - Full Stack Web App
+# 🍲 Food Kaatha - Full Stack Web App
 
 Track daily food transactions in your shop — for both immediate payments and *Katha* (credit).
 
