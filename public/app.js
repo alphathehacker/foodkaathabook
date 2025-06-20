@@ -1,27 +1,45 @@
 const API_BASE = window.location.origin;
 
-document.getElementById("add-item").addEventListener("click", () => {
+function calculateTotal() {
+  const itemRows = document.querySelectorAll("#items-container .flex");
+  let total = 0;
+  itemRows.forEach(row => {
+    const price = parseFloat(row.querySelector(".item-price").value);
+    if (!isNaN(price)) total += price;
+  });
+  document.getElementById("total-display").textContent = `Total: ₹${total}`;
+  return total;
+}
+
+function createItemRow(name = "", price = "") {
   const container = document.getElementById("items-container");
   const row = document.createElement("div");
   row.className = "flex space-x-2";
   row.innerHTML = `
-    <input type="text" placeholder="Item Name" class="item-name flex-1 p-2 border rounded" />
-    <input type="number" placeholder="₹" class="item-price w-24 p-2 border rounded" />
+    <input type="text" placeholder="Item Name" value="${name}" class="item-name flex-1 p-2 border rounded" />
+    <input type="number" placeholder="₹" value="${price}" class="item-price w-24 p-2 border rounded" />
     <button type="button" class="remove-item text-red-500">❌</button>
   `;
   container.appendChild(row);
+
+  row.querySelector(".item-price").addEventListener("input", calculateTotal);
+}
+
+document.getElementById("add-item").addEventListener("click", () => {
+  createItemRow();
 });
 
 document.getElementById("items-container").addEventListener("click", (e) => {
   if (e.target.classList.contains("remove-item")) {
     e.target.parentElement.remove();
+    calculateTotal();
   }
 });
 
 document.getElementById("transaction-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const customer = document.getElementById("customer").value;
-  const amount = parseFloat(document.getElementById("amount").value);
+  const amount = calculateTotal();
   const id = document.getElementById("edit-id").value;
 
   const items = [...document.querySelectorAll("#items-container .flex")].map(row => ({
@@ -45,11 +63,13 @@ document.getElementById("transaction-form").addEventListener("submit", async (e)
         body: JSON.stringify(transaction)
       });
     }
+
     document.getElementById("transaction-form").reset();
     document.getElementById("edit-id").value = "";
     document.getElementById("items-container").innerHTML = "";
+    calculateTotal();
     loadTransactions();
-  } catch (err) {
+  } catch {
     alert("❌ Error saving transaction.");
   }
 });
@@ -111,19 +131,9 @@ async function editTransaction(id) {
 
   document.getElementById("edit-id").value = t._id;
   document.getElementById("customer").value = t.customer;
-  document.getElementById("amount").value = t.amount;
-
   document.getElementById("items-container").innerHTML = "";
-  t.items.forEach(item => {
-    const row = document.createElement("div");
-    row.className = "flex space-x-2";
-    row.innerHTML = `
-      <input type="text" value="${item.name}" class="item-name flex-1 p-2 border rounded" />
-      <input type="number" value="${item.price}" class="item-price w-24 p-2 border rounded" />
-      <button type="button" class="remove-item text-red-500">❌</button>
-    `;
-    document.getElementById("items-container").appendChild(row);
-  });
+  t.items.forEach(item => createItemRow(item.name, item.price));
+  calculateTotal();
 }
 
 loadTransactions();
