@@ -3,31 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🍲 KAATHA BOOK</title>
+  <title>🍲 KAATHA BOOK </title>
   <script src="app.js" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 max-w-md mx-auto">
-  <h1 class="text-2xl font-bold mb-4 text-center">🍲 Food Katha</h1>
+  <h1 class="text-2xl font-bold mb-4 text-center">🍲 Kaatha Book </h1>
 
   <form id="transaction-form" class="bg-white p-4 rounded shadow space-y-2 mb-4">
     <input type="hidden" id="edit-id" />
-
     <input type="text" id="customer" placeholder="Customer Name" required class="w-full p-2 border rounded"/>
 
-    <div id="items-container" class="space-y-2">
-      <!-- Item rows go here -->
-    </div>
-
+    <div id="items-container" class="space-y-2"></div>
     <button type="button" id="add-item" class="text-blue-600 underline text-sm">+ Add Item</button>
 
-    <input type="number" id="amount" placeholder="Total Amount (₹)" required class="w-full p-2 border rounded"/>
+    <p id="total-display" class="text-right font-semibold text-blue-600">Total: ₹0</p>
 
     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Save Transaction</button>
   </form>
 
   <input type="text" id="search" placeholder="Search by Customer Name" class="w-full p-2 border rounded mb-2"/>
-
   <div id="transactions" class="space-y-2"></div>
 </body>
 </html>
