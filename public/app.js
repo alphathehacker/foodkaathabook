@@ -1,3 +1,8 @@
+// ✅ Redirect to login page if not logged in
+if (!localStorage.getItem("isLoggedIn")) {
+  window.location.href = "login.html";
+}
+
 const API_BASE = window.location.origin;
 
 function calculateTotal() {
@@ -134,6 +139,15 @@ async function editTransaction(id) {
   document.getElementById("items-container").innerHTML = "";
   t.items.forEach(item => createItemRow(item.name, item.price));
   calculateTotal();
+}
+
+// ✅ Logout support
+const logoutBtn = document.getElementById("logout");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("isLoggedIn");
+    window.location.href = "login.html";
+  });
 }
 
 loadTransactions();
