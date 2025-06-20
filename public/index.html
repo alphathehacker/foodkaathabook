@@ -11,20 +11,23 @@
   <h1 class="text-2xl font-bold mb-4 text-center">🍲 Food Katha</h1>
 
   <form id="transaction-form" class="bg-white p-4 rounded shadow space-y-2 mb-4">
+    <input type="hidden" id="edit-id" />
+
     <input type="text" id="customer" placeholder="Customer Name" required class="w-full p-2 border rounded"/>
-    <input type="text" id="item" placeholder="Item Name" class="w-full p-2 border rounded"/>
-    <input type="number" id="amount" placeholder="Amount (₹)" required class="w-full p-2 border rounded"/>
-    <select id="type" class="w-full p-2 border rounded">
-      <option value="paid">Paid</option>
-      <option value="katha">Katha</option>
-    </select>
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Add Transaction</button>
+
+    <div id="items-container" class="space-y-2">
+      <!-- Item rows go here -->
+    </div>
+
+    <button type="button" id="add-item" class="text-blue-600 underline text-sm">+ Add Item</button>
+
+    <input type="number" id="amount" placeholder="Total Amount (₹)" required class="w-full p-2 border rounded"/>
+
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Save Transaction</button>
   </form>
 
   <input type="text" id="search" placeholder="Search by Customer Name" class="w-full p-2 border rounded mb-2"/>
 
-  <div id="transactions" class="space-y-2">
-    <p class="text-gray-500 text-center">Loading transactions...</p>
-  </div>
+  <div id="transactions" class="space-y-2"></div>
 </body>
 </html>
