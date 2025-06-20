@@ -1,86 +1,77 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
 const User = require("./models/User");
-require('dotenv').config();
+const Transaction = require("./models/Transaction");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static("public"));
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("MongoDB error:", err.message));
 
 const auth = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Unauthorized" });
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch {
-    return res.status(403).json({ error: "Invalid token" });
+    res.status(403).json({ error: "Invalid token" });
   }
 };
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("MongoDB error:", err));
-
-// Model
-const Transaction = require('./models/Transaction');
-
-// API Routes
-app.post('/api/transactions', async (req, res) => {
+// AUTH ROUTES
+app.post("/api/signup", async (req, res) => {
   try {
-    const transaction = new Transaction(req.body);
-    await transaction.save();
-    res.status(201).json(transaction);
-  } catch (err) {
-    console.error("❌ Transaction Error:", err);
-    res.status(500).json({ error: err.message });
+    const { name, email, password } = req.body;
+    const hashed = await bcrypt.hash(password, 10);
+    await User.create({ name, email, password: hashed });
+    res.status(201).json({ message: "User registered" });
+  } catch {
+    res.status(400).json({ error: "Email already used" });
   }
 });
 
-app.get('/api/transactions', async (req, res) => {
-  try {
-    const transactions = await Transaction.find().sort({ createdAt: -1 });
-    res.json(transactions);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+app.post("/api/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ error: "Invalid credentials" });
   }
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  res.json({ token });
 });
 
-// Add these below the existing routes
-
-// Update a transaction
-app.put('/api/transactions/:id', async (req, res) => {
-  try {
-    const updated = await Transaction.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updated);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// TRANSACTION ROUTES
+app.get("/api/transactions", auth, async (req, res) => {
+  const transactions = await Transaction.find({ userId: req.user.id }).sort({ createdAt: -1 });
+  res.json(transactions);
 });
 
-// Delete a transaction
-app.delete('/api/transactions/:id', async (req, res) => {
-  try {
-    await Transaction.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.post("/api/transactions", auth, async (req, res) => {
+  const transaction = new Transaction({ ...req.body, userId: req.user.id });
+  await transaction.save();
+  res.status(201).json(transaction);
 });
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.put("/api/transactions/:id", auth, async (req, res) => {
+  const updated = await Transaction.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(updated);
 });
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
+app.delete("/api/transactions/:id", auth, async (req, res) => {
+  await Transaction.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted" });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
