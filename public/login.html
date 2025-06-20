@@ -1,14 +1,58 @@
 <!DOCTYPE html>
-<html>
-<head><title>Login</title></head>
-<body>
-  <h2>Login</h2>
-  <form id="login-form">
-    <input type="email" id="email" placeholder="Email" required/><br/>
-    <input type="password" id="password" placeholder="Password" required/><br/>
-    <button type="submit">Login</button>
-  </form>
-  <p>No account? <a href="signup.html">Signup</a></p>
-  <script src="app.js"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#f5f7fa] flex items-center justify-center min-h-screen">
+
+  <div class="relative w-[300px] h-[360px]">
+    <div class="absolute top-2 left-2 w-full h-full rounded-2xl bg-[#00aeef] transform rotate-2"></div>
+
+    <div class="relative bg-white rounded-2xl shadow-xl p-6 z-10 flex flex-col justify-center h-full">
+      <h2 class="text-xl font-bold text-black mb-6 text-center">Login</h2>
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Email Address"
+        class="mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        class="mb-6 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+      <button
+        id="loginBtn"
+        class="bg-[#00aeef] text-white py-2 rounded-md hover:bg-[#0098d4] transition-colors"
+      >
+        Submit
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.addEventListener('click', () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      const correctEmail = "admin@foodkatha.com";
+      const correctPassword = "secret123";
+
+      if (email === correctEmail && password === correctPassword) {
+        // Store login in localStorage and redirect
+        localStorage.setItem("isLoggedIn", "true");
+        window.location.href = "index.html";
+      } else {
+        alert("Invalid email or password!");
+      }
+    });
+  </script>
+
 </body>
 </html>
