@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Katha App</title>
+  <script defer src="app.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans">
+  <div class="max-w-md mx-auto p-4">
+    <h1 class="text-2xl font-bold text-center mb-4">🍲 Food Katha</h1>
+
+    <!-- Form to add transaction -->
+    <form id="transactionForm" class="space-y-4">
+      <input type="text" id="name" placeholder="Customer Name" class="w-full p-2 border rounded" required />
+      <input type="text" id="item" placeholder="Item Name" class="w-full p-2 border rounded" required />
+      <input type="number" id="amount" placeholder="Amount (₹)" class="w-full p-2 border rounded" required />
+      
+      <select id="type" class="w-full p-2 border rounded">
+        <option value="paid">Paid</option>
+        <option value="katha">Katha</option>
+      </select>
+      
+      <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded">Add Transaction</button>
+    </form>
+
+    <!-- Status message -->
+    <div id="status" class="mt-4 text-sm text-center text-green-600"></div>
+
+    <!-- Search transactions -->
+    <input type="text" id="searchInput" placeholder="Search by Customer Name" class="w-full mt-6 p-2 border rounded" />
+
+    <!-- Display section -->
+    <h2 class="text-xl font-semibold mt-4 mb-2">Recent Transactions</h2>
+    <div id="transactions" class="space-y-2"></div>
+  </div>
+</body>
+</html>
