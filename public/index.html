@@ -2,31 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#16a34a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Kaatha Book" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
   <title>🍲 KAATHA BOOK</title>
-  <script src="app.js" defer></script>
+  <script src="/app.js" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 p-4 max-w-md mx-auto">
-  <h1 class="text-2xl font-bold mb-4 text-center">🍲 KAATHA BOOK</h1>
+<body class="bg-gray-50 text-gray-800 p-4 max-w-md mx-auto min-h-screen">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">🍲 KAATHA BOOK</h1>
+    <button id="logout" class="text-sm text-red-500 underline">Logout</button>
+  </div>
+  <p id="welcome" class="text-sm text-gray-500 mb-4"></p>
 
-  <form id="transaction-form" class="bg-white p-4 rounded shadow space-y-2 mb-4">
+  <form id="transaction-form" class="bg-white p-4 rounded-xl shadow space-y-3 mb-4">
     <input type="hidden" id="edit-id" />
-    <input type="text" id="customer" placeholder="Customer Name" required class="w-full p-2 border rounded"/>
+    <input type="text" id="customer" placeholder="Customer Name" required autocomplete="off"
+      class="w-full p-3 border rounded-lg text-base" />
 
     <div id="items-container" class="space-y-2"></div>
-    <button type="button" id="add-item" class="text-blue-600 underline text-sm">+ Add Item</button>
+    <button type="button" id="add-item" class="text-green-700 underline text-sm">+ Add Item</button>
 
-    <p id="total-display" class="text-right font-semibold text-blue-600">Total: ₹0</p>
+    <!-- Paid / Katha toggle -->
+    <div class="grid grid-cols-2 gap-2">
+      <button type="button" id="type-katha"
+        class="txn-type py-2 rounded-lg font-semibold border-2 border-amber-500 bg-amber-100 text-amber-800">📒 Katha (credit)</button>
+      <button type="button" id="type-paid"
+        class="txn-type py-2 rounded-lg font-semibold border-2 border-gray-200 bg-white text-gray-500">💵 Paid</button>
+    </div>
 
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Save Transaction</button>
+    <p id="total-display" class="text-right font-bold text-lg text-green-700">Total: ₹0</p>
+
+    <button type="submit" class="bg-green-600 text-white px-4 py-3 rounded-lg w-full font-semibold text-base active:bg-green-700">Save Transaction</button>
   </form>
 
-  <input type="text" id="search" placeholder="Search by Customer Name" class="w-full p-2 border rounded mb-2"/>
-  <div id="transactions" class="space-y-2"></div>
-  <br>
-  <button id="logout" class="bg-red-500 text-white px-3 py-1 rounded">Logout</button>
-</body>
-  <script src="app.js"></script>
+  <input type="text" id="search" placeholder="🔍 Search by Customer Name" autocomplete="off"
+    class="w-full p-3 border rounded-lg mb-3 text-base" />
+  <div id="transactions" class="space-y-2 pb-8"></div>
 
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+    }
+  </script>
+</body>
 </html>
