@@ -37,6 +37,116 @@ if (welcome && localStorage.getItem("fk_name")) {
   welcome.textContent = "Namaste, " + localStorage.getItem("fk_name") + " 🙏";
 }
 
+// ---- Fixed menu: tap an item to add it to the transaction ----
+const DEFAULT_MENU = {
+  morning: [
+    { name: "Puri", price: 20 },
+    { name: "Bajji", price: 20 },
+    { name: "Idly", price: 20 },
+    { name: "Attu", price: 20 },
+  ],
+  evening: [
+    { name: "Salla punuku", price: null },
+    { name: "Mirapakaaya bajji", price: null },
+    { name: "Tomoto bajji", price: null },
+    { name: "Aratikaaya bajji", price: null },
+    { name: "Milmaker", price: null },
+  ],
+  extra: [
+    { name: "Sanna pusa", price: null },
+    { name: "Boondi", price: null },
+    { name: "Kommulu", price: null },
+    { name: "Chekodilu", price: null },
+    { name: "Checkkalu", price: null },
+  ],
+};
+const MENU_GROUPS = [
+  { key: "morning", title: "☀️ Morning", editable: true },
+  { key: "evening", title: "🌙 Evening", editable: false },
+  { key: "extra", title: "➕ Extra", editable: false },
+];
+
+function getRateOverrides() {
+  try { return JSON.parse(localStorage.getItem("fk_menu_rates") || "{}"); }
+  catch (e) { return {}; }
+}
+function saveRateOverrides(o) {
+  localStorage.setItem("fk_menu_rates", JSON.stringify(o));
+}
+function menuPrice(groupKey, item) {
+  if (groupKey !== "morning") return item.price;
+  const o = getRateOverrides();
+  return o[item.name] !== undefined ? o[item.name] : item.price;
+}
+
+function renderMenu() {
+  const menu = document.getElementById("menu");
+  if (!menu) return;
+  menu.innerHTML = "";
+  MENU_GROUPS.forEach(g => {
+    const wrap = document.createElement("div");
+    const title = document.createElement("p");
+    title.className = "text-sm font-semibold text-gray-600 mb-1";
+    title.textContent = g.title;
+    wrap.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "grid grid-cols-2 gap-2";
+    DEFAULT_MENU[g.key].forEach(item => {
+      const price = menuPrice(g.key, item);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 active:bg-green-100 text-left";
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "text-sm font-medium";
+      nameSpan.textContent = item.name;
+      const right = document.createElement("span");
+      right.className = "flex items-center gap-1";
+      const priceSpan = document.createElement("span");
+      priceSpan.className = "text-sm font-semibold text-green-700";
+      priceSpan.textContent = (price === null || price === undefined || price === "") ? "₹?" : "₹" + price;
+      right.appendChild(priceSpan);
+      if (g.editable) {
+        const edit = document.createElement("span");
+        edit.className = "text-gray-400 text-sm px-1";
+        edit.textContent = "✎";
+        edit.title = "Edit default rate";
+        edit.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const cur = menuPrice(g.key, item);
+          const val = prompt("Default rate for " + item.name + " (₹):", cur);
+          if (val === null) return;
+          const num = parseFloat(val);
+          if (isNaN(num) || num < 0) { alert("Please enter a valid rate."); return; }
+          const o = getRateOverrides();
+          o[item.name] = num;
+          saveRateOverrides(o);
+          renderMenu();
+        });
+        right.appendChild(edit);
+      }
+      btn.appendChild(nameSpan);
+      btn.appendChild(right);
+      btn.addEventListener("click", () => addMenuItem(item.name, price));
+      grid.appendChild(btn);
+    });
+    wrap.appendChild(grid);
+    menu.appendChild(wrap);
+  });
+}
+
+function addMenuItem(name, price) {
+  createItemRow(name, (price === null || price === undefined) ? "" : price);
+  calculateTotal();
+  // focus the price box when the rate still needs to be entered
+  const rows = document.querySelectorAll("#items-container .item-row");
+  const last = rows[rows.length - 1];
+  if (last && (price === null || price === undefined || price === "")) {
+    const input = last.querySelector(".item-price");
+    if (input) input.focus();
+  }
+}
+
 // ---- Paid / Katha toggle ----
 let txnType = "katha";
 const btnKatha = document.getElementById("type-katha");
@@ -220,6 +330,7 @@ document.getElementById("logout").addEventListener("click", () => {
 });
 
 paintTypeButtons();
+renderMenu();
 loadTransactions();
 
 } // end requireLogin gate
