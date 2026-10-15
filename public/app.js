@@ -31,7 +31,14 @@ if (!requireLogin()) {
   // redirected to login; stop running the rest
 } else {
 
-const API_BASE = window.location.origin;
+const LIVE_API = "https://food-katha.onrender.com";
+// In the installed Android app (Capacitor) pages run on https://localhost with
+// no port, so API calls must target the live backend explicitly.
+// On the web (Render) and local dev (localhost:5000), same-origin is correct.
+const API_BASE = (window.location.protocol === "capacitor:" ||
+  ((window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && !window.location.port))
+  ? LIVE_API
+  : window.location.origin;
 const welcome = document.getElementById("welcome");
 if (welcome && localStorage.getItem("fk_name")) {
   welcome.textContent = "Namaste, " + localStorage.getItem("fk_name") + " 🙏";

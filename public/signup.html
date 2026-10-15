@@ -37,6 +37,14 @@
   </div>
 
   <script>
+    // Same API-base rule as app.js: the installed Android app runs on
+    // https://localhost (no port), so talk to the live backend explicitly.
+    const LIVE_API = "https://food-katha.onrender.com";
+    const API_BASE = (window.location.protocol === "capacitor:" ||
+      ((window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && !window.location.port))
+      ? LIVE_API
+      : window.location.origin;
+
     if (localStorage.getItem("fk_token")) window.location.href = "/index.html";
 
     const errBox = document.getElementById("error");
@@ -53,7 +61,7 @@
       const btn = document.getElementById("signupBtn");
       btn.disabled = true; btn.textContent = "Creating account…";
       try {
-        const res = await fetch("/api/auth/signup", {
+        const res = await fetch(API_BASE + "/api/auth/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password })
