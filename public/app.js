@@ -273,11 +273,14 @@ function displayTransactions(transactions) {
     const div = document.createElement("div");
     div.className = "bg-white p-3 rounded-xl shadow";
     const itemsList = (t.items || []).map(i => "<li>" + escapeHtml(i.name) + " - ₹" + i.price + "</li>").join("");
+    const paidBtn = t.type === "paid" ? "" :
+      "<button data-paid='" + t._id + "' class='text-green-700 text-sm font-semibold'>✓ Paid</button>";
     div.innerHTML =
       "<div class='flex items-center justify-between'><p><strong>" + escapeHtml(t.customer) + "</strong> - ₹" + t.amount + "</p>" + typeBadge(t) + "</div>" +
       (itemsList ? "<ul class='text-sm text-gray-600 mt-1'>" + itemsList + "</ul>" : "") +
       "<p class='text-xs text-gray-400 text-right mt-1'>" + new Date(t.createdAt).toLocaleString() + "</p>" +
       "<div class='mt-2 flex justify-end space-x-4'>" +
+      paidBtn +
       "<button data-edit='" + t._id + "' class='text-blue-600 text-sm'>✏️ Edit</button>" +
       "<button data-del='" + t._id + "' class='text-red-600 text-sm'>🗑️ Delete</button>" +
       "</div>";
@@ -288,6 +291,8 @@ function displayTransactions(transactions) {
     b.addEventListener("click", () => editTransaction(b.getAttribute("data-edit"))));
   container.querySelectorAll("[data-del]").forEach(b =>
     b.addEventListener("click", () => deleteTransaction(b.getAttribute("data-del"))));
+  container.querySelectorAll("[data-paid]").forEach(b =>
+    b.addEventListener("click", () => markPaid(b.getAttribute("data-paid"))));
 }
 
 function escapeHtml(s) {
@@ -300,6 +305,24 @@ async function deleteTransaction(id) {
   if (!confirm("Delete this transaction?")) return;
   try {
     await apiFetch(API_BASE + "/api/transactions/" + id, { method: "DELETE", headers: authHeaders() });
+    loadTransactions();
+  } catch (err) { /* unauthorized handled in apiFetch */ }
+}
+
+// Customer paid up their katha: tick this entry as paid
+async function markPaid(id) {
+  try {
+    const res = await apiFetch(API_BASE + "/api/transactions", { headers: authHeaders() });
+    const data = await res.json();
+    const t = data.find(x => x._id === id);
+    if (!t) return;
+    if (!confirm("Mark ₹" + t.amount + " from " + t.customer + " as paid?")) return;
+    const upd = await apiFetch(API_BASE + "/api/transactions/" + id, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ type: "paid" })
+    });
+    if (!upd.ok) { alert("❌ Could not mark as paid."); return; }
     loadTransactions();
   } catch (err) { /* unauthorized handled in apiFetch */ }
 }
