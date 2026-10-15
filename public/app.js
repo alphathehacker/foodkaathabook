@@ -44,6 +44,12 @@ if (welcome && localStorage.getItem("fk_name")) {
   welcome.textContent = "Namaste, " + localStorage.getItem("fk_name") + " 🙏";
 }
 
+// ---- Page detection: form page (index) vs list page (transactions) ----
+const formEl = document.getElementById("transaction-form");
+const listEl = document.getElementById("transactions");
+const isFormPage = !!formEl;
+const isListPage = !!listEl;
+
 // ---- Fixed menu: tap an item to add it to the transaction ----
 const DEFAULT_MENU = {
   morning: [
@@ -168,8 +174,8 @@ function paintTypeButtons() {
     btnKatha.className = "txn-type py-2 rounded-lg font-semibold border-2 border-gray-200 bg-white text-gray-500";
   }
 }
-btnKatha.addEventListener("click", () => { txnType = "katha"; paintTypeButtons(); });
-btnPaid.addEventListener("click", () => { txnType = "paid"; paintTypeButtons(); });
+if (btnKatha) btnKatha.addEventListener("click", () => { txnType = "katha"; paintTypeButtons(); });
+if (btnPaid) btnPaid.addEventListener("click", () => { txnType = "paid"; paintTypeButtons(); });
 
 // ---- Item rows + live total ----
 function calculateTotal() {
@@ -194,11 +200,13 @@ function createItemRow(name, price) {
   container.appendChild(row);
   row.querySelector(".item-price").addEventListener("input", calculateTotal);
 }
-createItemRow(); // one empty row to start
+if (isFormPage) createItemRow(); // one empty row to start
 
-document.getElementById("add-item").addEventListener("click", () => createItemRow());
+const addItemBtn = document.getElementById("add-item");
+if (addItemBtn) addItemBtn.addEventListener("click", () => createItemRow());
 
-document.getElementById("items-container").addEventListener("click", (e) => {
+const itemsContainer = document.getElementById("items-container");
+if (itemsContainer) itemsContainer.addEventListener("click", (e) => {
   if (e.target.classList.contains("remove-item")) {
     e.target.parentElement.remove();
     calculateTotal();
@@ -206,7 +214,7 @@ document.getElementById("items-container").addEventListener("click", (e) => {
 });
 
 // ---- Save (create / update) ----
-document.getElementById("transaction-form").addEventListener("submit", async (e) => {
+if (formEl) formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
   const customer = document.getElementById("customer").value.trim();
   if (!customer) { alert("Please enter the customer name."); return; }
@@ -233,20 +241,23 @@ document.getElementById("transaction-form").addEventListener("submit", async (e)
     const data = await res.json();
     if (!res.ok) { alert("❌ " + (data.error || "Error saving transaction.")); return; }
 
+    // Coming back from an edit on the Transactions page → return there.
+    if (id) { window.location.href = "/transactions.html"; return; }
+
     document.getElementById("transaction-form").reset();
     document.getElementById("edit-id").value = "";
     document.getElementById("items-container").innerHTML = "";
     createItemRow();
     txnType = "katha"; paintTypeButtons();
     calculateTotal();
-    loadTransactions();
   } catch (err) {
     if (err.message !== "unauthorized") alert("❌ Error saving transaction.");
   }
 });
 
 // ---- List / search ----
-document.getElementById("search").addEventListener("input", loadTransactions);
+const searchEl = document.getElementById("search");
+if (searchEl) searchEl.addEventListener("input", loadTransactions);
 
 async function loadTransactions() {
   try {
@@ -295,7 +306,7 @@ function displayTransactions(transactions) {
   });
 
   container.querySelectorAll("[data-edit]").forEach(b =>
-    b.addEventListener("click", () => editTransaction(b.getAttribute("data-edit"))));
+    b.addEventListener("click", () => { window.location.href = "/index.html?edit=" + b.getAttribute("data-edit"); }));
   container.querySelectorAll("[data-del]").forEach(b =>
     b.addEventListener("click", () => deleteTransaction(b.getAttribute("data-del"))));
   container.querySelectorAll("[data-paid]").forEach(b =>
@@ -353,14 +364,23 @@ async function editTransaction(id) {
 }
 
 // ---- Logout ----
-document.getElementById("logout").addEventListener("click", () => {
+const logoutBtn = document.getElementById("logout");
+if (logoutBtn) logoutBtn.addEventListener("click", () => {
   localStorage.removeItem("fk_token");
   localStorage.removeItem("fk_name");
   window.location.href = "/login.html";
 });
 
-paintTypeButtons();
-renderMenu();
-loadTransactions();
+// ---- Per-page init ----
+if (isFormPage) {
+  paintTypeButtons();
+  renderMenu();
+  // Opened from Transactions → Edit: pre-fill the form.
+  const editId = new URLSearchParams(window.location.search).get("edit");
+  if (editId) editTransaction(editId);
+}
+if (isListPage) {
+  loadTransactions();
+}
 
 } // end requireLogin gate
