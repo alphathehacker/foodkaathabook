@@ -109,12 +109,12 @@ function renderMenu() {
       const price = menuPrice(g.key, item);
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "flex items-center justify-between px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 active:bg-green-100 text-left";
+      btn.className = "min-w-0 flex items-center justify-between gap-1 px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 active:bg-green-100 text-left";
       const nameSpan = document.createElement("span");
-      nameSpan.className = "text-sm font-medium";
+      nameSpan.className = "text-sm font-medium min-w-0 break-words";
       nameSpan.textContent = item.name;
       const right = document.createElement("span");
-      right.className = "flex items-center gap-1";
+      right.className = "flex items-center gap-1 shrink-0";
       const priceSpan = document.createElement("span");
       priceSpan.className = "text-sm font-semibold text-green-700";
       priceSpan.textContent = (price === null || price === undefined || price === "") ? "₹?" : "₹" + price;
@@ -194,9 +194,9 @@ function createItemRow(name, price) {
   const row = document.createElement("div");
   row.className = "item-row flex space-x-2";
   row.innerHTML =
-    '<input type="text" placeholder="Item Name" value="' + (name || "") + '" class="item-name flex-1 p-2 border rounded-lg text-base" />' +
-    '<input type="number" inputmode="decimal" placeholder="₹" value="' + (price === undefined ? "" : price) + '" class="item-price w-24 p-2 border rounded-lg text-base" />' +
-    '<button type="button" class="remove-item text-red-500 text-xl px-1">✕</button>';
+    '<input type="text" placeholder="Item Name" value="' + (name || "") + '" class="item-name min-w-0 flex-1 p-2 border rounded-lg text-base" />' +
+    '<input type="number" inputmode="decimal" placeholder="₹" value="' + (price === undefined ? "" : price) + '" class="item-price shrink-0 w-24 p-2 border rounded-lg text-base" />' +
+    '<button type="button" class="remove-item shrink-0 text-red-500 text-xl px-1">✕</button>';
   container.appendChild(row);
   row.querySelector(".item-price").addEventListener("input", calculateTotal);
 }
@@ -294,7 +294,7 @@ function displayTransactions(transactions) {
     const paidBtn = t.type === "paid" ? "" :
       "<button data-paid='" + t._id + "' class='text-green-700 text-sm font-semibold'>✓ Paid</button>";
     div.innerHTML =
-      "<div class='flex items-center justify-between'><p><strong>" + escapeHtml(t.customer) + "</strong> - ₹" + t.amount + "</p>" + typeBadge(t) + "</div>" +
+      "<div class='flex items-center justify-between gap-2'><p class='min-w-0 truncate'><strong>" + escapeHtml(t.customer) + "</strong> - ₹" + t.amount + "</p>" + typeBadge(t) + "</div>" +
       (itemsList ? "<ul class='text-sm text-gray-600 mt-1'>" + itemsList + "</ul>" : "") +
       "<p class='text-xs text-gray-400 text-right mt-1'>" + new Date(t.createdAt).toLocaleString() + "</p>" +
       "<div class='mt-2 flex justify-end space-x-4'>" +
