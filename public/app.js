@@ -40,8 +40,11 @@ const API_BASE = (window.location.protocol === "capacitor:" ||
   ? LIVE_API
   : window.location.origin;
 const welcome = document.getElementById("welcome");
+// i18n helpers (loaded from /i18n.js)
+const T = window.FK_I18N.T;
+const itemDisplayName = window.FK_I18N.itemDisplayName;
 if (welcome && localStorage.getItem("fk_name")) {
-  welcome.textContent = "Namaste, " + localStorage.getItem("fk_name") + " 🙏";
+  welcome.textContent = T("welcome", localStorage.getItem("fk_name"));
 }
 
 // ---- Page detection: form page (index) vs list page (transactions) ----
@@ -74,9 +77,9 @@ const DEFAULT_MENU = {
   ],
 };
 const MENU_GROUPS = [
-  { key: "morning", title: "☀️ Morning", editable: true },
-  { key: "evening", title: "🌙 Evening", editable: false },
-  { key: "extra", title: "➕ Extra", editable: false },
+  { key: "morning", titleKey: "morning", editable: true },
+  { key: "evening", titleKey: "evening", editable: false },
+  { key: "extra", titleKey: "extra", editable: false },
 ];
 
 function getRateOverrides() {
@@ -100,7 +103,7 @@ function renderMenu() {
     const wrap = document.createElement("div");
     const title = document.createElement("p");
     title.className = "text-sm font-semibold text-gray-600 mb-1";
-    title.textContent = g.title;
+    title.textContent = T(g.titleKey);
     wrap.appendChild(title);
 
     const grid = document.createElement("div");
@@ -112,7 +115,7 @@ function renderMenu() {
       btn.className = "min-w-0 flex items-center justify-between gap-1 px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 active:bg-green-100 text-left";
       const nameSpan = document.createElement("span");
       nameSpan.className = "text-sm font-medium min-w-0 break-words";
-      nameSpan.textContent = item.name;
+      nameSpan.textContent = itemDisplayName(item.name);
       const right = document.createElement("span");
       right.className = "flex items-center gap-1 shrink-0";
       const priceSpan = document.createElement("span");
@@ -127,10 +130,10 @@ function renderMenu() {
         edit.addEventListener("click", (ev) => {
           ev.stopPropagation();
           const cur = menuPrice(g.key, item);
-          const val = prompt("Default rate for " + item.name + " (₹):", cur);
+          const val = prompt(T("rate_prompt", itemDisplayName(item.name)), cur);
           if (val === null) return;
           const num = parseFloat(val);
-          if (isNaN(num) || num < 0) { alert("Please enter a valid rate."); return; }
+          if (isNaN(num) || num < 0) { alert(T("invalid_rate")); return; }
           const o = getRateOverrides();
           o[item.name] = num;
           saveRateOverrides(o);
@@ -185,7 +188,7 @@ function calculateTotal() {
     const price = parseFloat(row.querySelector(".item-price").value);
     if (!isNaN(price)) total += price;
   });
-  document.getElementById("total-display").textContent = "Total: ₹" + total;
+  document.getElementById("total-display").textContent = T("total") + ": ₹" + total;
   return total;
 }
 
@@ -194,7 +197,7 @@ function createItemRow(name, price) {
   const row = document.createElement("div");
   row.className = "item-row flex space-x-2";
   row.innerHTML =
-    '<input type="text" placeholder="Item Name" value="' + (name || "") + '" class="item-name min-w-0 flex-1 p-2 border rounded-lg text-base" />' +
+    '<input type="text" placeholder="' + T("item_name") + '" value="' + (name || "") + '" class="item-name min-w-0 flex-1 p-2 border rounded-lg text-base" />' +
     '<input type="number" inputmode="decimal" placeholder="₹" value="' + (price === undefined ? "" : price) + '" class="item-price shrink-0 w-24 p-2 border rounded-lg text-base" />' +
     '<button type="button" class="remove-item shrink-0 text-red-500 text-xl px-1">✕</button>';
   container.appendChild(row);
@@ -217,7 +220,7 @@ if (itemsContainer) itemsContainer.addEventListener("click", (e) => {
 if (formEl) formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
   const customer = document.getElementById("customer").value.trim();
-  if (!customer) { alert("Please enter the customer name."); return; }
+  if (!customer) { alert(T("enter_customer")); return; }
   const amount = calculateTotal();
   const id = document.getElementById("edit-id").value;
 
@@ -239,7 +242,7 @@ if (formEl) formEl.addEventListener("submit", async (e) => {
       body: JSON.stringify(transaction)
     });
     const data = await res.json();
-    if (!res.ok) { alert("❌ " + (data.error || "Error saving transaction.")); return; }
+    if (!res.ok) { alert(data.error || T("err_save")); return; }
 
     // Coming back from an edit on the Transactions page → return there.
     if (id) { window.location.href = "/transactions.html"; return; }
@@ -251,7 +254,7 @@ if (formEl) formEl.addEventListener("submit", async (e) => {
     txnType = "katha"; paintTypeButtons();
     calculateTotal();
   } catch (err) {
-    if (err.message !== "unauthorized") alert("❌ Error saving transaction.");
+    if (err.message !== "unauthorized") alert(T("err_save"));
   }
 });
 
@@ -267,15 +270,15 @@ async function loadTransactions() {
     displayTransactions(data.filter(t => (t.customer || "").toLowerCase().includes(search)));
   } catch (err) {
     if (err.message !== "unauthorized") {
-      document.getElementById("transactions").innerHTML = "<p class='text-red-500 text-center'>❌ Failed to load transactions.</p>";
+      document.getElementById("transactions").innerHTML = "<p class='text-red-500 text-center'>" + T("err_load") + "</p>";
     }
   }
 }
 
 function typeBadge(t) {
   return t.type === "paid"
-    ? "<span class='text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700'>💵 Paid</span>"
-    : "<span class='text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700'>📒 Katha</span>";
+    ? "<span class='text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700'>" + T("paid") + "</span>"
+    : "<span class='text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700'>" + T("katha") + "</span>";
 }
 
 function displayTransactions(transactions) {
@@ -283,24 +286,24 @@ function displayTransactions(transactions) {
   container.innerHTML = "";
 
   if (!transactions.length) {
-    container.innerHTML = "<p class='text-gray-400 text-center py-8'>No transactions yet.<br>Add the first one above 👆</p>";
+    container.innerHTML = "<p class='text-gray-400 text-center py-8'>" + T("empty_list") + "</p>";
     return;
   }
 
   transactions.forEach(t => {
     const div = document.createElement("div");
     div.className = "bg-white p-3 rounded-xl shadow";
-    const itemsList = (t.items || []).map(i => "<li>" + escapeHtml(i.name) + " - ₹" + i.price + "</li>").join("");
+    const itemsList = (t.items || []).map(i => "<li>" + escapeHtml(itemDisplayName(i.name)) + " - ₹" + i.price + "</li>").join("");
     const paidBtn = t.type === "paid" ? "" :
-      "<button data-paid='" + t._id + "' class='text-green-700 text-sm font-semibold'>✓ Paid</button>";
+      "<button data-paid='" + t._id + "' class='text-green-700 text-sm font-semibold'>" + T("tick_paid") + "</button>";
     div.innerHTML =
       "<div class='flex items-center justify-between gap-2'><p class='min-w-0 truncate'><strong>" + escapeHtml(t.customer) + "</strong> - ₹" + t.amount + "</p>" + typeBadge(t) + "</div>" +
       (itemsList ? "<ul class='text-sm text-gray-600 mt-1'>" + itemsList + "</ul>" : "") +
       "<p class='text-xs text-gray-400 text-right mt-1'>" + new Date(t.createdAt).toLocaleString() + "</p>" +
       "<div class='mt-2 flex justify-end space-x-4'>" +
       paidBtn +
-      "<button data-edit='" + t._id + "' class='text-blue-600 text-sm'>✏️ Edit</button>" +
-      "<button data-del='" + t._id + "' class='text-red-600 text-sm'>🗑️ Delete</button>" +
+      "<button data-edit='" + t._id + "' class='text-blue-600 text-sm'>" + T("edit") + "</button>" +
+      "<button data-del='" + t._id + "' class='text-red-600 text-sm'>" + T("delete") + "</button>" +
       "</div>";
     container.appendChild(div);
   });
@@ -320,7 +323,7 @@ function escapeHtml(s) {
 }
 
 async function deleteTransaction(id) {
-  if (!confirm("Delete this transaction?")) return;
+  if (!confirm(T("confirm_delete"))) return;
   try {
     await apiFetch(API_BASE + "/api/transactions/" + id, { method: "DELETE", headers: authHeaders() });
     loadTransactions();
@@ -334,13 +337,13 @@ async function markPaid(id) {
     const data = await res.json();
     const t = data.find(x => x._id === id);
     if (!t) return;
-    if (!confirm("Mark ₹" + t.amount + " from " + t.customer + " as paid?")) return;
+    if (!confirm(T("confirm_paid", t.amount, t.customer))) return;
     const upd = await apiFetch(API_BASE + "/api/transactions/" + id, {
       method: "PUT",
       headers: authHeaders(),
       body: JSON.stringify({ type: "paid" })
     });
-    if (!upd.ok) { alert("❌ Could not mark as paid."); return; }
+    if (!upd.ok) { alert(T("err_mark_paid")); return; }
     loadTransactions();
   } catch (err) { /* unauthorized handled in apiFetch */ }
 }
@@ -372,6 +375,11 @@ if (logoutBtn) logoutBtn.addEventListener("click", () => {
 });
 
 // ---- Per-page init ----
+window.FK_I18N.applyI18n();
+window.addEventListener("fk-lang-change", () => {
+  if (isFormPage) renderMenu();
+  if (isListPage) loadTransactions();
+});
 if (isFormPage) {
   paintTypeButtons();
   renderMenu();

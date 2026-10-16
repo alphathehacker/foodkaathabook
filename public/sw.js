@@ -1,5 +1,5 @@
 // Kaatha Book service worker — cache the app shell, always fetch API live.
-const CACHE = "kaatha-book-v5";
+const CACHE = "kaatha-book-v6";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "/login.html",
   "/signup.html",
   "/app.js",
+  "/i18n.js",
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png"
